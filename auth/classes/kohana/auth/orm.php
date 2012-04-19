@@ -125,23 +125,31 @@ class Kohana_Auth_ORM extends Auth {
 	 */
 	public function force_login($user, $mark_session_as_forced = FALSE)
 	{
-		if ( ! is_object($user))
+		try
 		{
-			$username = $user;
+			if ( ! is_object($user))
+			{
+				$username = $user;
 
-			// Load the user
-			$user = ORM::factory('user');
-			$user->where($user->unique_key($username), '=', $username)->find();
-		}
+				// Load the user
+				$user = ORM::factory('user');
+				$user->where($user->unique_key($username), '=', $username)->find();
+			}
 
-		if ($mark_session_as_forced === TRUE)
+			if ($mark_session_as_forced === TRUE)
+			{
+				// Mark the session as forced, to prevent users from changing account information
+				$this->_session->set($this->_config['forced_key'], TRUE);
+			}
+
+			// Run the standard completion
+			$this->complete_login($user);
+			
+		} catch (Exception $e)
 		{
-			// Mark the session as forced, to prevent users from changing account information
-			$this->_session->set($this->_config['forced_key'], TRUE);
+			Piccsy_Log::add(Kohana::DEBUG,$e->getMessage());
+			throw new Exception('login-error');
 		}
-
-		// Run the standard completion
-		$this->complete_login($user);
 	}
 
 	/**
