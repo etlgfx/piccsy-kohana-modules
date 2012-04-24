@@ -87,7 +87,7 @@ class Kohana_Auth_ORM extends Auth {
 	 * @param   boolean  enable autologin
 	 * @return  boolean
 	 */
-	protected function _login($user, $password, $remember)
+	protected function _login($user, $password, $remember=false)
 	{
 		if ( ! is_object($user))
 		{
@@ -101,7 +101,7 @@ class Kohana_Auth_ORM extends Auth {
 		// If the passwords match, perform a login
 		if ($user->has('roles', ORM::factory('role', array('name' => 'login'))) AND $user->password === $password)
 		{
-			if ($remember === TRUE)
+			if ($remember)
 			{
 				$this->remember($user);
 			}
@@ -125,31 +125,23 @@ class Kohana_Auth_ORM extends Auth {
 	 */
 	public function force_login($user, $mark_session_as_forced = FALSE)
 	{
-		try
+		if ( ! is_object($user))
 		{
-			if ( ! is_object($user))
-			{
-				$username = $user;
+			$username = $user;
 
-				// Load the user
-				$user = ORM::factory('user');
-				$user->where($user->unique_key($username), '=', $username)->find();
-			}
-
-			if ($mark_session_as_forced === TRUE)
-			{
-				// Mark the session as forced, to prevent users from changing account information
-				$this->_session->set($this->_config['forced_key'], TRUE);
-			}
-
-			// Run the standard completion
-			$this->complete_login($user);
-			
-		} catch (Exception $e)
-		{
-			Piccsy_Log::add(Kohana::DEBUG,$e->getMessage());
-			throw new Exception('login-error');
+			// Load the user
+			$user = ORM::factory('user');
+			$user->where($user->unique_key($username), '=', $username)->find();
 		}
+
+		if ($mark_session_as_forced === TRUE)
+		{
+			// Mark the session as forced, to prevent users from changing account information
+			$this->_session->set($this->_config['forced_key'], TRUE);
+		}
+
+		// Run the standard completion
+		$this->complete_login($user);
 	}
 
 	/**
@@ -159,6 +151,7 @@ class Kohana_Auth_ORM extends Auth {
 	 */
 	public function auto_login()
 	{
+		
 		if ($token = Cookie::get($this->_config['autologin_key']))
 		{
 			// Load the token and user
@@ -173,7 +166,7 @@ class Kohana_Auth_ORM extends Auth {
 
 					// Set the new token
 					Cookie::set($this->_config['autologin_key'], $token->token, $token->expires - time());
-
+			
 					// Complete the login with the found data
 					$this->complete_login($token->user);
 
