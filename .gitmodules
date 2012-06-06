@@ -1,0 +1,3 @@
+[submodule "redisko"]
+	path = redisko
+	url = git://github.com/z-image/Redisko.git
