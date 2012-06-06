@@ -1,3 +1,6 @@
 [submodule "redisko"]
 	path = redisko
 	url = git://github.com/z-image/Redisko.git
+[submodule "swiftmailer"]
+	path = swiftmailer
+	url = git://github.com/swiftmailer/swiftmailer.git
